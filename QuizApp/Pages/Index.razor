@@ -1,0 +1,167 @@
+﻿@page "/"
+
+<h1>Tooles Quiz</h1>
+
+@if (currentQuestion != null)
+{
+    <h3>@currentQuestion.QuestionContent.TextLine</h3>
+}
+
+<table class="table">
+    <thead>
+        <tr>
+            @foreach (var categoryQuestions in questions.GroupBy(n => n.Category))
+            {
+                <th>@categoryQuestions.Key</th>
+            }
+        </tr>
+    </thead>
+    <tbody>
+        @foreach(var row in Rows)
+        {
+            <tr>
+                @foreach(var question in row)
+                {
+                    <td>
+
+                        <button class="btn w-100 m-3 @(question.State != Question.QuestionStates.Closed ? "disabled btn-danger" : "btn-primary")" @onclick="() => ToggleQuestion(question)">@question.Points</button>
+                    </td>
+                }
+            </tr>
+            
+        }
+    </tbody>
+</table>
+
+
+
+
+@code {
+    private Question currentQuestion = null; 
+
+    private List<Question> questions { get; set; }
+
+    private IEnumerable<Question> GenerateQuestions()
+    {
+
+        yield return new Question("AI", "Wer bsdfsefasawdawdn OPEN AI", "Microsoft und Elon Musk", 100);
+        yield return new Question("AI", "Wer buttert awdasdadN AI", "Microsoft und Elon Musk", 200);
+        yield return new Question("AI", "Wer butterawdawdd in OPEN AI", "Microsoft und Elon Musk", 300);
+        yield return new Question("AI", "WsefsdfOPEN AI", "Microsoft und Elon Musk", 400);
+
+        yield return new Question("Sucuk", "asdawd", "Microsoft und Elon Musk", 100);
+        yield return new Question("Sucuk", "Wer asdwetggrseg fleißig Geld in OPEN AI", "Microsoft und Elon Musk", 200);
+        yield return new Question("Sucuk", "Wer buttert fleißig Geld in OPEaesfesfasefasefN AI", "Microsoft und Elon Musk", 300);
+        yield return new Question("Sucuk", "Wer buttert fleißig Geld in OPEN AI", "Microsoft und Elon Musk", 400);
+
+        yield return new Question("Roland", "Wer butfersfsdfPEN AI", "Microsoft und Elon Musk", 100);
+        yield return new Question("Roland", "Wer buttert sefsdf OPEN AI", "Microsoft und Elon Musk", 200);
+        yield return new Question("Roland", "Wer buttesefsdfgssfPEN AI", "Microsoft und Elon Musk", 300);
+        yield return new Question("Roland", "WerawdasdawdEN AI", "Microsoft und Elon Musk", 400);
+
+    }
+
+    private void ToggleQuestion(Question question)
+    {
+        currentQuestion = question; 
+        question.State = Question.QuestionStates.Opened;
+    }
+
+    private List<List<Question>> Rows
+    {
+        get
+        {
+            List<List<Question>> rows = new List<List<Question>>();
+
+
+
+            var grouped = questions.GroupBy(n => n.Category);
+            for (int i = 0; i < grouped.Max(n => n.Count()); i++)
+            {
+                rows.Add(new List<Question>());
+            }
+
+
+            foreach(var group in grouped)
+            {
+                int index = 0;
+                var orderedByPoints = group.OrderBy(n => n.Points);
+
+                foreach(var question in orderedByPoints)
+                {
+                    rows[index].Add(question);
+                    index++;
+                }
+            }
+
+            return rows;
+        }
+
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        this.questions = GenerateQuestions().ToList();
+    }
+
+    private class Question
+    {
+        public enum QuestionStates
+        {
+            Closed,
+            Opened,
+            ShowAnswer
+        }
+
+        public string QuestionId { get; set; }
+
+        public int Points { get; set; } = 100;
+
+        public MediaContent QuestionContent { get; set; }
+
+        public MediaContent Answer { get; set; }
+
+        public string Category { get; set; }
+
+        public QuestionStates State { get; set; } = QuestionStates.Closed;
+
+        public Question()
+        {
+            QuestionId = Guid.NewGuid().ToString();
+        }
+
+        public Question(string category, string question, string answer, int points = 100)
+        {
+
+            QuestionId = Guid.NewGuid().ToString();
+            this.Category = category;
+            this.QuestionContent = new MediaContent(question);
+            this.Answer = new MediaContent(answer);
+            this.Points = points;
+        }
+    }
+
+    private class MediaContent
+    {
+        public enum MediaContentTypes
+        {
+            Text,
+            Image,
+            Video
+        }
+
+        public string TextLine { get; set; }
+
+        public string ContentSource { get; set; }
+
+        public MediaContentTypes Type { get; set; }
+
+        public MediaContent(string question)
+        {
+            Type = MediaContentTypes.Text;
+            TextLine = question;
+        }
+    }
+
+}
